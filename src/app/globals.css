@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
+  --color-yellow: var(--yellow);
+  --color-glass: var(--glass);
+  --color-glass-border: var(--glass-border);
+  --font-zain: var(--font-zain);
+}
+
+:root {
+  --background: #050505;
+  --foreground: #ffffff;
+  --primary: #FF2D85;
+  --primary-hover: #E02875;
+  --accent: #FF80B5;
+  --yellow: #FFD700;
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+.theme-pink {
+  --background: #FFF0F5;
+  --foreground: #050505;
+  --primary: #FF2D85;
+  --primary-hover: #FF1493;
+  --accent: #FFB6C1;
+  --glass: rgba(0, 0, 0, 0.03);
+  --glass-border: rgba(0, 0, 0, 0.08);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-zain), system-ui, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+@layer utilities {
+  .glass-card {
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .text-gradient {
+    background: linear-gradient(to right, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .glow-pink {
+    box-shadow: 0 0 20px rgba(255, 45, 133, 0.2);
+  }
+}
