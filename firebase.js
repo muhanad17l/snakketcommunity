@@ -4,12 +4,13 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  apiKey: "AIzaSyCiiuXwVhbCeFOA1Hed6Fx_1ElkWGeUjY",
+  authDomain: "snakket-community.firebaseapp.com",
+  projectId: "snakket-community",
   storageBucket: "",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  messagingSenderId: "2081259663",
+  appId: "1:2081259663:web:978dd76f7a6eb8985130fa",
+  measurementId: "G-YYFJTCEJEM"
 };
 
 // Initialize Firebase
