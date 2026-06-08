@@ -42,6 +42,11 @@ export default function ChatPage() {
   const [showStickers, setShowStickers] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [indexError, setIndexError] = useState(false);
+
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedSticker, setSelectedSticker] = useState<string | null>(null);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,23 +86,60 @@ export default function ChatPage() {
     }
   }, [messages]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setSelectedSticker(null); // Clear sticker if image chosen
+    }
+  };
+
+  const handleStickerClick = (url: string) => {
+    setSelectedSticker(url);
+    setSelectedImage(null); // Clear image if sticker chosen
+    setPreviewUrl(null);
+    setShowStickers(false);
+  };
+
+  const clearSelection = () => {
+    setSelectedImage(null);
+    setPreviewUrl(null);
+    setSelectedSticker(null);
+  };
+
   const handleSendMessage = async (data: Partial<Message>) => {
     if (!user) return;
+    setUploading(true);
     try {
+      let imageUrl = data.image || "";
+      if (selectedImage) {
+        const storageRef = ref(storage, `chat_images/${Date.now()}_${selectedImage.name}`);
+        await uploadBytes(storageRef, selectedImage);
+        imageUrl = await getDownloadURL(storageRef);
+      }
+
       await addDoc(collection(db, "messages"), {
         ...data,
+        image: imageUrl,
+        sticker: selectedSticker || data.sticker || "",
         senderId: user.uid,
         senderName: user.displayName || "مبدع Snakket",
         createdAt: serverTimestamp(),
       });
+
+      clearSelection();
     } catch (err) {
-      console.error(err);
+      console.error("Send Error:", err);
+      alert("فشل في إرسال الرسالة. قد يكون هناك مشكلة في الـ CORS أو الصلاحيات.");
+    } finally {
+      setUploading(false);
     }
   };
 
   const onSendText = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() && !selectedImage && !selectedSticker) return;
     const text = newMessage;
     setNewMessage("");
     await handleSendMessage({ text });
@@ -125,7 +167,7 @@ export default function ChatPage() {
                 <input type="text" placeholder="بحث..." className="bg-transparent text-sm outline-none" />
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 font-bold">
                <button className="w-full flex items-center gap-4 p-5 rounded-3xl bg-primary text-white shadow-2xl shadow-primary/30">
                   <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center font-black">#</div>
                   <div className="text-right">
@@ -160,22 +202,98 @@ export default function ChatPage() {
                     <div className={`max-w-[75%] p-5 rounded-[28px] shadow-sm ${isMe ? "bg-primary text-white rounded-br-none" : "bg-white/5 border border-white/10 text-foreground rounded-bl-none"}`}>
                       {!isMe && <p className="text-[10px] font-black text-primary mb-2 uppercase tracking-widest">{msg.senderName}</p>}
                       {msg.text && <p className="text-sm font-medium leading-relaxed">{msg.text}</p>}
-                      {msg.image && <img src={msg.image} className="rounded-2xl mt-3 w-full" alt="c" />}
-                      {msg.sticker && <img src={msg.sticker} className="w-24 h-24 mt-2" alt="s" />}
+                      {msg.image && <img src={msg.image} className="rounded-2xl mt-3 w-full border border-white/10" alt="img" />}
+                      {msg.sticker && <img src={msg.sticker} className="w-24 h-24 mt-2" alt="sticker" />}
                     </div>
                   </motion.div>
                 );
               })}
             </div>
 
-            <div className="p-8 border-t border-white/10 bg-white/5">
+            {/* Sticker Picker */}
+            <AnimatePresence>
+              {showStickers && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className="absolute bottom-32 right-8 z-50 glass-card p-4 rounded-3xl border border-white/10 flex gap-4 shadow-2xl bg-background/95 backdrop-blur-xl"
+                >
+                  {STICKERS.map((s, i) => (
+                    <button key={i} onClick={() => handleStickerClick(s)} className="p-2 hover:bg-white/10 rounded-2xl transition-all hover:scale-110 active:scale-95">
+                      <img src={s} className="w-12 h-12" alt="sticker" />
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Input Section */}
+            <div className="p-8 border-t border-white/10 bg-white/5 relative">
+              {/* Media Preview */}
+              <AnimatePresence>
+                {(previewUrl || selectedSticker) && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute bottom-full mb-4 left-8 bg-white/10 backdrop-blur-md p-4 rounded-[32px] border border-white/10 flex items-center gap-4 shadow-2xl"
+                  >
+                    <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-white/10 bg-black/40">
+                       <img src={previewUrl || selectedSticker || ""} className="w-full h-full object-cover" alt="preview" />
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={clearSelection}
+                      onTouchStart={clearSelection}
+                      className="p-3 bg-red-500 text-white rounded-2xl hover:bg-red-600 transition-colors shadow-lg active:scale-90"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <form onSubmit={onSendText} className="flex items-center gap-4">
-                 <button type="button" onClick={() => fileInputRef.current?.click()} className="p-4 bg-white/5 hover:bg-white/10 rounded-2xl text-white/30 transition-all border border-white/10"><Paperclip /></button>
+                 <button 
+                  type="button" 
+                  onClick={() => fileInputRef.current?.click()} 
+                  className="p-4 bg-white/5 hover:bg-white/10 rounded-2xl text-white/30 transition-all border border-white/10"
+                 >
+                   <Paperclip />
+                 </button>
+                 <input 
+                  type="file" 
+                  hidden 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  accept="image/*" 
+                 />
+                 
                  <div className="flex-1 relative">
-                    <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="اكتب رسالتك..." className="w-full bg-white/5 border border-white/10 rounded-3xl py-5 px-8 outline-none focus:ring-2 focus:ring-primary/40" />
-                    <button type="button" onClick={() => setShowStickers(!showStickers)} className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 hover:text-primary transition-colors"><Smile /></button>
+                    <input 
+                      type="text" 
+                      value={newMessage} 
+                      onChange={(e) => setNewMessage(e.target.value)} 
+                      placeholder="اكتب رسالتك..." 
+                      className="w-full bg-white/5 border border-white/10 rounded-3xl py-5 px-8 outline-none focus:ring-2 focus:ring-primary/40 font-bold" 
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowStickers(!showStickers)} 
+                      className={`absolute left-6 top-1/2 -translate-y-1/2 transition-colors ${showStickers ? "text-primary" : "text-white/20 hover:text-primary"}`}
+                    >
+                      <Smile />
+                    </button>
                  </div>
-                 <button type="submit" disabled={!newMessage.trim()} className="bg-primary text-white p-5 rounded-3xl shadow-2xl shadow-primary/30 active:scale-95 disabled:opacity-50"><Send /></button>
+                 
+                 <button 
+                  type="submit" 
+                  disabled={(!newMessage.trim() && !selectedImage && !selectedSticker) || uploading} 
+                  className="bg-primary text-white p-5 rounded-3xl shadow-2xl shadow-primary/30 active:scale-95 disabled:opacity-50"
+                 >
+                   {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Send />}
+                 </button>
               </form>
             </div>
           </main>
