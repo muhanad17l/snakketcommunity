@@ -1,8 +1,8 @@
 [
   {
-    "origin": ["https://snakketcommunity.netlify.app", "http://localhost:3000"],
+    "origin": ["http://localhost:3000", "https://snakketcommunity.vercel.app"],
     "method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
-    "responseHeader": ["Content-Type", "Authorization", "x-goog-resumable"],
+    "responseHeader": ["*"],
     "maxAgeSeconds": 3600
   }
 ]

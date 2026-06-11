@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NEXT_PUBLIC_FIREBASE_API_KEY = "AIzaSyCiiuXwVhbCelFOA1Hed6Fx_1ElkWGeUjY"
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = "snakket-community.firebaseapp.com"
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID = "snakket-community"
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET = "snakket-community.firebasestorage.app"
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID = "2081259663"
+  NEXT_PUBLIC_FIREBASE_APP_ID = "1:2081259663:web:ee5a74007164469d5130fa"
+  NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID = "G-CDNQ7CFPLN"
+  NEXT_PUBLIC_GEMINI_API_KEY = "DUMMY_KEY"
